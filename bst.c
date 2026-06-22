@@ -1,5 +1,6 @@
 #include "bst.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct Node {
     int key;
@@ -7,16 +8,21 @@ typedef struct Node {
     struct Node *right;
 } Node;
 
-static void insert(Node **root, int value) {
+static int insert(Node **root, int value) {
     if (*root == 0) {
         *root = (Node*)malloc(sizeof(Node));
+        if (!*root) {
+            fprintf(stderr, "Ошибка: недостаточно памяти для создания узла дерева\n");
+            return -1;
+        }
         (*root)->key = value;
         (*root)->left = 0;
         (*root)->right = 0;
+        return 0;
     } else if (value < (*root)->key) {
-        insert(&((*root)->left), value);
+        return insert(&((*root)->left), value);
     } else {
-        insert(&((*root)->right), value);
+        return insert(&((*root)->right), value);
     }
 }
 
@@ -36,10 +42,17 @@ static void freeTree(Node *root) {
 
 void binary_tree_sort(int *arr, int n) {
     if (n <= 1) return;
+
     Node *root = 0;
+
     for (int i = 0; i < n; i++) {
-        insert(&root, arr[i]);
+        if (insert(&root, arr[i]) != 0) {
+            freeTree(root);
+            fprintf(stderr, "Ошибка: сортировка прервана из-за недостатка памяти\n");
+            return;
+        }
     }
+
     int idx = 0;
     inorder(root, arr, &idx);
     freeTree(root);
